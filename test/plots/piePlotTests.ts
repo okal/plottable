@@ -13,6 +13,29 @@ describe("Plots", () => {
       svg.remove();
     });
 
+    it("each slice consists of a fill path and a stroke path", () => {
+      var svg = TestMethods.generateSVG(500, 500);
+      var piePlot = new Plottable.Plots.Pie();
+      piePlot.sectorValue((d) => d.value);
+      var data = [
+        { value: 1 },
+        { value: 1 }
+      ];
+      var dataset = new Plottable.Dataset(data);
+      piePlot.addDataset(dataset);
+      piePlot.renderTo(svg);
+      var renderArea = (<any> piePlot)._renderArea;
+      var arcPaths = renderArea.selectAll(".arc");
+      var arcFillPaths = renderArea.selectAll(".arc.fill");
+      var arcOutlinePaths = renderArea.selectAll(".arc.outline");
+      assert.strictEqual(arcPaths.size(), 4, "2 paths per datum");
+      assert.strictEqual(arcFillPaths.size(), 2, "1 fill path per datum");
+      assert.strictEqual(arcOutlinePaths.size(), 2, "1 outline path1 per datum");
+      assert.strictEqual(arcFillPaths.style("stroke"), "none", "fill paths have no stroke");
+      assert.strictEqual(arcOutlinePaths.style("fill"), "none", "outline paths have no fill");
+      svg.remove();
+    });
+
     it("updates slices when data changes", () => {
       var svg = TestMethods.generateSVG(500, 500);
       var piePlot = new Plottable.Plots.Pie();
@@ -28,7 +51,7 @@ describe("Plots", () => {
       piePlot.renderTo(svg);
       var fourSlicePathStrings: String[] = [];
       piePlot.content().selectAll("path").each(function() { fourSlicePathStrings.push(d3.select(this).attr("d")); });
-      assert.lengthOf(fourSlicePathStrings, fourSliceData.length, "one path per datum");
+      assert.lengthOf(fourSlicePathStrings, fourSliceData.length * 2, "2 paths per datum");
 
       var twoSliceData = [
         { value: 1 },
@@ -37,7 +60,7 @@ describe("Plots", () => {
       dataset.data(twoSliceData);
       var twoSlicePathStrings: String[] = [];
       piePlot.content().selectAll("path").each(function() { twoSlicePathStrings.push(d3.select(this).attr("d")); });
-      assert.lengthOf(twoSlicePathStrings, twoSliceData.length, "one path per datum");
+      assert.lengthOf(twoSlicePathStrings, twoSliceData.length * 2, "2 paths per datum");
 
       twoSlicePathStrings.forEach((pathString, index) => {
         assert.notStrictEqual(pathString, fourSlicePathStrings[index], "slices were updated when data changed");
@@ -225,7 +248,7 @@ describe("Plots", () => {
     });
 
     it("sectors divided evenly", () => {
-      var arcPaths = renderArea.selectAll(".arc");
+      var arcPaths = renderArea.selectAll(".arc.fill");
       assert.lengthOf(arcPaths[0], 2, "only has two sectors");
       var arcPath0 = d3.select(arcPaths[0][0]);
       var pathPoints0 = TestMethods.normalizePath(arcPath0.attr("d")).split(/[A-Z]/).slice(1, 4);
@@ -262,7 +285,7 @@ describe("Plots", () => {
     it("project value onto different attribute", () => {
       piePlot.sectorValue((d) => d.value2);
 
-      var arcPaths = renderArea.selectAll(".arc");
+      var arcPaths = renderArea.selectAll(".arc.fill");
       assert.lengthOf(arcPaths[0], 2, "only has two sectors");
       var arcPath0 = d3.select(arcPaths[0][0]);
       var pathPoints0 = TestMethods.normalizePath(arcPath0.attr("d")).split(/[A-Z]/).slice(1, 4);
@@ -292,7 +315,7 @@ describe("Plots", () => {
 
     it("innerRadius", () => {
       piePlot.innerRadius(5);
-      var arcPaths = renderArea.selectAll(".arc");
+      var arcPaths = renderArea.selectAll(".arc.fill");
       assert.lengthOf(arcPaths[0], 2, "only has two sectors");
 
       var pathPoints0 = TestMethods.normalizePath(d3.select(arcPaths[0][0]).attr("d")).split(/[A-Z]/).slice(1, 5);
@@ -313,7 +336,7 @@ describe("Plots", () => {
 
     it("outerRadius", () => {
       piePlot.outerRadius(() => 150);
-      var arcPaths = renderArea.selectAll(".arc");
+      var arcPaths = renderArea.selectAll(".arc.fill");
       assert.lengthOf(arcPaths[0], 2, "only has two sectors");
 
       var pathPoints0 = TestMethods.normalizePath(d3.select(arcPaths[0][0]).attr("d")).split(/[A-Z]/).slice(1, 5);
@@ -335,14 +358,14 @@ describe("Plots", () => {
     describe("selections", () => {
       it("retrieves all dataset selections with no args", () => {
         var allSectors = piePlot.selections();
-        assert.strictEqual(allSectors.size(), 2, "all sectors retrieved");
+        assert.strictEqual(allSectors.size(), 2 * 2, "all sectors retrieved");
 
         svg.remove();
       });
 
       it("retrieves correct selections", () => {
         var allSectors = piePlot.selections([simpleDataset]);
-        assert.strictEqual(allSectors.size(), 2, "all sectors retrieved");
+        assert.strictEqual(allSectors.size(), 2 * 2, "all sectors retrieved");
         assert.includeMembers(allSectors.data(), simpleData, "dataset data in selection data");
 
         svg.remove();
@@ -473,7 +496,7 @@ describe("Plots", () => {
 
       plot.renderTo(svg);
 
-      var elementsDrawnSel = (<any> plot)._element.selectAll(".arc");
+      var elementsDrawnSel = (<any> plot)._element.selectAll(".arc.fill");
 
       assert.strictEqual(elementsDrawnSel.size(), 4,
         "There should be exactly 4 slices in the pie chart, representing the valid values");
