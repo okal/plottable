@@ -1322,7 +1322,11 @@ declare module Plottable {
 declare module Plottable {
     module Drawers {
         class Arc extends Drawer {
-            constructor(dataset: Dataset, isOutline?: boolean);
+            constructor(dataset: Dataset);
+            protected _applyDefaultAttributes(selection: d3.Selection<any>): void;
+        }
+        class ArcOutline extends Drawer {
+            constructor(dataset: Dataset);
             protected _applyDefaultAttributes(selection: d3.Selection<any>): void;
         }
     }
