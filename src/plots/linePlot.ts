@@ -55,6 +55,10 @@ export module Plots {
         (<QuantitativeScale<number>>this.y().scale).snapsDomain(!autorangeSmooth);
       }
 
+      if (this.x() && this.x().scale && this.x().scale instanceof QuantitativeScale) {
+        (<QuantitativeScale<number>>this.x().scale).snapsDomain(!autorangeSmooth);
+      }
+
       this.autorangeMode(this.autorangeMode());
       return this;
     }
@@ -102,11 +106,11 @@ export module Plots {
 
       var extent = super._computeExtent(dataset, accScaleBinding, filter);
 
-      if (!(this._autorangeSmooth && this.y() && this.y().scale && accScaleBinding === this.y())) {
+      if (!(this._autorangeSmooth && this.x() && this.x().scale && accScaleBinding === this.x())) {
         return extent;
       }
 
-      var edgeIntersectionPoints = this._getEdgeIntersectionPoints();
+      var edgeIntersectionPoints = this._getEdgeIntersectionPoints(this.y(), this.x());
       var includedValues = edgeIntersectionPoints[0].concat(edgeIntersectionPoints[1]).map((point) => point.y);
 
       var maxIncludedValue = Math.max.apply(this, includedValues);
@@ -127,18 +131,22 @@ export module Plots {
       return extent;
     }
 
-    private _getEdgeIntersectionPoints(): Point[][] {
+    private _getEdgeIntersectionPoints(xAccessor: any, yAccessor: any): Point[][] {
 
-      if (!(this.y().scale instanceof QuantitativeScale)) {
+      if (!(yAccessor.scale instanceof QuantitativeScale)) {
         return [[], []];
       }
 
-      var yScale = <QuantitativeScale<number>>this.y().scale;
-      var xScale = this.x().scale;
+      var yScale = <QuantitativeScale<number>>yAccessor.scale;
+      var xScale = xAccessor.scale;
 
       var intersectionPoints: Point[][] = [[], []];
       var leftX = xScale.scale(xScale.domain()[0]);
       var rightX = xScale.scale(xScale.domain()[1]);
+
+      console.log(leftX, rightX);
+
+
       this.datasets().forEach((dataset) => {
 
         var data = dataset.data();
@@ -146,14 +154,14 @@ export module Plots {
         var x1: number, x2: number, y1: number, y2: number;
         var prevX: number, prevY: number, currX: number, currY: number;
         for (var i = 1; i < data.length; i++) {
-          prevX = currX || xScale.scale(this.x().accessor(data[i - 1], i - 1, dataset));
-          prevY = currY || yScale.scale(this.y().accessor(data[i - 1], i - 1, dataset));
+          prevX = currX || xScale.scale(xAccessor.accessor(data[i - 1], i - 1, dataset));
+          prevY = currY || yScale.scale(yAccessor.accessor(data[i - 1], i - 1, dataset));
 
-          currX = xScale.scale(this.x().accessor(data[i], i, dataset));
-          currY = yScale.scale(this.y().accessor(data[i], i, dataset));
+          currX = xScale.scale(xAccessor.accessor(data[i], i, dataset));
+          currY = yScale.scale(yAccessor.accessor(data[i], i, dataset));
 
           // If values crossed left edge
-          if (prevX < leftX && leftX <= currX) {
+          if ((prevX < leftX) === (leftX <= currX)) {
             x1 = leftX - prevX;
             x2 = currX - prevX;
             y2 = currY - prevY;
@@ -166,7 +174,7 @@ export module Plots {
           }
 
           // If values crossed right edge
-          if (prevX < rightX && rightX <= currX) {
+          if ((prevX < rightX) === (rightX <= currX)) {
             x1 = rightX - prevX;
             x2 = currX - prevX;
             y2 = currY - prevY;

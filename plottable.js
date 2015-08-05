@@ -8154,6 +8154,9 @@ var Plottable;
                 if (this.y() && this.y().scale && this.y().scale instanceof Plottable.QuantitativeScale) {
                     this.y().scale.snapsDomain(!autorangeSmooth);
                 }
+                if (this.x() && this.x().scale && this.x().scale instanceof Plottable.QuantitativeScale) {
+                    this.x().scale.snapsDomain(!autorangeSmooth);
+                }
                 this.autorangeMode(this.autorangeMode());
                 return this;
             };
@@ -8170,10 +8173,10 @@ var Plottable;
             };
             Line.prototype._computeExtent = function (dataset, accScaleBinding, filter) {
                 var extent = _super.prototype._computeExtent.call(this, dataset, accScaleBinding, filter);
-                if (!(this._autorangeSmooth && this.y() && this.y().scale && accScaleBinding === this.y())) {
+                if (!(this._autorangeSmooth && this.x() && this.x().scale && accScaleBinding === this.x())) {
                     return extent;
                 }
-                var edgeIntersectionPoints = this._getEdgeIntersectionPoints();
+                var edgeIntersectionPoints = this._getEdgeIntersectionPoints(this.y(), this.x());
                 var includedValues = edgeIntersectionPoints[0].concat(edgeIntersectionPoints[1]).map(function (point) { return point.y; });
                 var maxIncludedValue = Math.max.apply(this, includedValues);
                 var minIncludedValue = Math.min.apply(this, includedValues);
@@ -8188,27 +8191,27 @@ var Plottable;
                 }
                 return extent;
             };
-            Line.prototype._getEdgeIntersectionPoints = function () {
-                var _this = this;
-                if (!(this.y().scale instanceof Plottable.QuantitativeScale)) {
+            Line.prototype._getEdgeIntersectionPoints = function (xAccessor, yAccessor) {
+                if (!(yAccessor.scale instanceof Plottable.QuantitativeScale)) {
                     return [[], []];
                 }
-                var yScale = this.y().scale;
-                var xScale = this.x().scale;
+                var yScale = yAccessor.scale;
+                var xScale = xAccessor.scale;
                 var intersectionPoints = [[], []];
                 var leftX = xScale.scale(xScale.domain()[0]);
                 var rightX = xScale.scale(xScale.domain()[1]);
+                console.log(leftX, rightX);
                 this.datasets().forEach(function (dataset) {
                     var data = dataset.data();
                     var x1, x2, y1, y2;
                     var prevX, prevY, currX, currY;
                     for (var i = 1; i < data.length; i++) {
-                        prevX = currX || xScale.scale(_this.x().accessor(data[i - 1], i - 1, dataset));
-                        prevY = currY || yScale.scale(_this.y().accessor(data[i - 1], i - 1, dataset));
-                        currX = xScale.scale(_this.x().accessor(data[i], i, dataset));
-                        currY = yScale.scale(_this.y().accessor(data[i], i, dataset));
+                        prevX = currX || xScale.scale(xAccessor.accessor(data[i - 1], i - 1, dataset));
+                        prevY = currY || yScale.scale(yAccessor.accessor(data[i - 1], i - 1, dataset));
+                        currX = xScale.scale(xAccessor.accessor(data[i], i, dataset));
+                        currY = yScale.scale(yAccessor.accessor(data[i], i, dataset));
                         // If values crossed left edge
-                        if (prevX < leftX && leftX <= currX) {
+                        if ((prevX < leftX) === (leftX <= currX)) {
                             x1 = leftX - prevX;
                             x2 = currX - prevX;
                             y2 = currY - prevY;
@@ -8219,7 +8222,7 @@ var Plottable;
                             });
                         }
                         // If values crossed right edge
-                        if (prevX < rightX && rightX <= currX) {
+                        if ((prevX < rightX) === (rightX <= currX)) {
                             x1 = rightX - prevX;
                             x2 = currX - prevX;
                             y2 = currY - prevY;
