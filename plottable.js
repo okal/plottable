@@ -10059,8 +10059,8 @@ var Plottable;
                 this._keyReleaseCallbacks = {};
                 this._mouseMoveCallback = function (point) { return false; }; // HACKHACK: registering a listener
                 this._downedKeys = new Plottable.Utils.Set();
-                this._keyDownCallback = function (keyCode) { return _this._handleKeyDownEvent(keyCode); };
-                this._keyUpCallback = function (keyCode) { return _this._handleKeyUpEvent(keyCode); };
+                this._keyDownCallback = function (keyCode, event) { return _this._handleKeyDownEvent(keyCode, event); };
+                this._keyUpCallback = function (keyCode, event) { return _this._handleKeyUpEvent(keyCode, event); };
             }
             Key.prototype._anchor = function (component) {
                 _super.prototype._anchor.call(this, component);
@@ -10078,18 +10078,20 @@ var Plottable;
                 this._keyDispatcher.offKeyUp(this._keyUpCallback);
                 this._keyDispatcher = null;
             };
-            Key.prototype._handleKeyDownEvent = function (keyCode) {
+            Key.prototype._handleKeyDownEvent = function (keyCode, event) {
                 var p = this._translateToComponentSpace(this._positionDispatcher.lastMousePosition());
                 if (this._isInsideComponent(p)) {
                     if (this._keyPressCallbacks[keyCode]) {
-                        this._keyPressCallbacks[keyCode].callCallbacks(keyCode);
+                        this._keyPressCallbacks[keyCode].callCallbacks(keyCode, event);
                     }
-                    this._downedKeys.add(keyCode);
+                    if (!event.repeat) {
+                        this._downedKeys.add(keyCode);
+                    }
                 }
             };
-            Key.prototype._handleKeyUpEvent = function (keyCode) {
+            Key.prototype._handleKeyUpEvent = function (keyCode, event) {
                 if (this._downedKeys.has(keyCode) && this._keyReleaseCallbacks[keyCode]) {
-                    this._keyReleaseCallbacks[keyCode].callCallbacks(keyCode);
+                    this._keyReleaseCallbacks[keyCode].callCallbacks(keyCode, event);
                 }
                 this._downedKeys.delete(keyCode);
             };

@@ -116,6 +116,21 @@ describe("Interactions", () => {
         keyInteraction.offKeyPress(aCode, aCallback2);
         svg.remove();
       });
+
+      it("passes event to callback", () => {
+        let aCallback = (keyCode: number, event: KeyboardEvent) => {
+          assert.strictEqual(keyCode, aCode);
+          assert.isNotNull(event);
+        };
+
+        keyInteraction.onKeyPress(aCode, aCallback);
+        keyInteraction.attachTo(component);
+
+        TestMethods.triggerFakeMouseEvent("mouseover", component.background(), 100, 100);
+        TestMethods.triggerFakeKeyboardEvent("keydown", component.background(), aCode);
+        keyInteraction.offKeyPress(aCode, aCallback);
+        svg.remove();
+      });
     });
 
     describe("onKeyRelease", () => {
@@ -196,6 +211,12 @@ describe("Interactions", () => {
         TestMethods.triggerFakeKeyboardEvent("keyup", component.background(), aCode);
         assert.isFalse(aCallbackCalled, "callback for \"a\" was not called when \"a\" key was released");
 
+        TestMethods.triggerFakeMouseEvent("mouseout", component.background(), -100, -100);
+        TestMethods.triggerFakeKeyboardEvent("keydown", component.background(), aCode);
+        TestMethods.triggerFakeMouseEvent("mouseover", component.background(), 100, 100);
+        TestMethods.triggerFakeKeyboardEvent("keyup", component.background(), aCode);
+        TestMethods.triggerFakeKeyboardEvent("keydown", component.background(), aCode, { repeat : true });
+        assert.isFalse(aCallbackCalled, "callback for \"a\" was not called when \"a\" key was released");
         keyInteraction.offKeyRelease(aCode, aCallback);
         svg.remove();
       });
@@ -265,6 +286,21 @@ describe("Interactions", () => {
         assert.isTrue(aCallback2Called, "callback 2 for \"a\" is still connected to the interaction");
 
         keyInteraction.offKeyRelease(aCode, aCallback2);
+        svg.remove();
+      });
+
+      it("passes event to callback", () => {
+        aCallback = (keyCode: number, event: KeyboardEvent) => {
+          assert.strictEqual(keyCode, aCode);
+          assert.isNotNull(event);
+        };
+
+        keyInteraction.onKeyRelease(aCode, aCallback);
+        keyInteraction.attachTo(component);
+
+        TestMethods.triggerFakeMouseEvent("mouseover", component.background(), 100, 100);
+        TestMethods.triggerFakeKeyboardEvent("keydown", component.background(), aCode);
+        keyInteraction.offKeyRelease(aCode, aCallback);
         svg.remove();
       });
     });

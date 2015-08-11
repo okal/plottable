@@ -3863,7 +3863,7 @@ declare module Plottable {
 
 
 declare module Plottable {
-    type KeyCallback = (keyCode: number) => void;
+    type KeyCallback = (keyCode: number, event?: KeyboardEvent) => void;
     module Interactions {
         class Key extends Interaction {
             protected _anchor(component: Component): void;

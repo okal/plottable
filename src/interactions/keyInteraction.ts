@@ -1,7 +1,7 @@
 ///<reference path="../reference.ts" />
 
 module Plottable {
-export type KeyCallback = (keyCode: number) => void;
+export type KeyCallback = (keyCode: number, event?: KeyboardEvent) => void;
 
 export module Interactions {
   export class Key extends Interaction {
@@ -16,8 +16,8 @@ export module Interactions {
 
     private _mouseMoveCallback = (point: Point) => false; // HACKHACK: registering a listener
     private _downedKeys = new Plottable.Utils.Set();
-    private _keyDownCallback = (keyCode: number) => this._handleKeyDownEvent(keyCode);
-    private _keyUpCallback = (keyCode: number) => this._handleKeyUpEvent(keyCode);
+    private _keyDownCallback = (keyCode: number, event: KeyboardEvent) => this._handleKeyDownEvent(keyCode, event);
+    private _keyUpCallback = (keyCode: number, event: KeyboardEvent) => this._handleKeyUpEvent(keyCode, event);
 
     protected _anchor(component: Component) {
       super._anchor(component);
@@ -41,19 +41,21 @@ export module Interactions {
       this._keyDispatcher = null;
     }
 
-    private _handleKeyDownEvent(keyCode: number) {
+    private _handleKeyDownEvent(keyCode: number, event: KeyboardEvent) {
       let p = this._translateToComponentSpace(this._positionDispatcher.lastMousePosition());
       if (this._isInsideComponent(p)) {
         if (this._keyPressCallbacks[keyCode]) {
-          this._keyPressCallbacks[keyCode].callCallbacks(keyCode);
+          this._keyPressCallbacks[keyCode].callCallbacks(keyCode, event);
         }
-        this._downedKeys.add(keyCode);
+        if (!event.repeat) {
+          this._downedKeys.add(keyCode);
+        }
       }
     }
 
-    private _handleKeyUpEvent(keyCode: number) {
+    private _handleKeyUpEvent(keyCode: number, event: KeyboardEvent) {
       if (this._downedKeys.has(keyCode) && this._keyReleaseCallbacks[keyCode]) {
-        this._keyReleaseCallbacks[keyCode].callCallbacks(keyCode);
+        this._keyReleaseCallbacks[keyCode].callCallbacks(keyCode, event);
       }
       this._downedKeys.delete(keyCode);
     }
