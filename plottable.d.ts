@@ -2881,12 +2881,37 @@ declare module Plottable {
              * @returns {PlotEntity[]} The PlotEntities at the particular point
              */
             entitiesAt(point: Point): PlotEntity[];
+            /**
+             * Gets the Accessor for label.
+             */
+            label(): AccessorScaleBinding<any, string>;
+            /**
+             * Sets label to the result of an Accessor.
+             *
+             * @param {Accessor<string>} label
+             * @returns {Plots.Rectangle} The calling Rectangle Plot.
+             */
+            label(label: Accessor<string>): Plots.Rectangle<X, Y>;
+            /**
+             * Get whether rectangle labels are enabled.
+             *
+             * @returns {boolean} Whether rectangles should display labels or not.
+             */
+            labelsEnabled(): boolean;
+            /**
+             * Sets whether labels are enabled.
+             *
+             * @param {boolean} labelsEnabled
+             * @returns {Rectangle} The calling Rectangle Plot.
+             */
+            labelsEnabled(enabled: boolean): Plots.Rectangle<X, Y>;
             protected _propertyProjectors(): AttributeToProjector;
             protected _pixelPoint(datum: any, index: number, dataset: Dataset): {
                 x: any;
                 y: any;
             };
             protected _getDataToDraw(): Utils.Map<Dataset, any[]>;
+            protected _additionalPaint(time: number): void;
         }
     }
 }
